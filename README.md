@@ -1,2 +1,2 @@
 # programming-at-mipt
-Favourite programs, that I written during my studies at MIPT
+Favourite programs, that I wrote during my studies at MIPT
