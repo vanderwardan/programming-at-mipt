@@ -15,175 +15,9 @@ ImplicitSplayTree::~ImplicitSplayTree() {
   }
 }
 
-ImplicitSplayTree::Node *ImplicitSplayTree::merge(Node *left, Node *right) {
-  if (right == nullptr) return left;
-  if (left == nullptr) return right;
-
-  push(left);
-
-  if (left->right != nullptr) {
-    Node *curNode = left;
-    while (curNode->right != nullptr) {
-      curNode = curNode->right;
-      push(curNode);
-    }
-    splay(left, curNode);
-  }
-
-  push(left);
-  left->right = right;
-  right->parent = left;
-  update(left);
-
-  return left;
-}
-
-std::pair<ImplicitSplayTree::Node *, ImplicitSplayTree::Node *> ImplicitSplayTree::split(Node *tree, int pos) {
-  assert(tree != nullptr);
-  assert(nodeSize(tree) > pos && pos >= -1);
-
-  if (nodeSize(tree) == pos + 1) {
-    return std::make_pair(tree, nullptr);
-  }
-
-  if (pos == -1) {
-    return std::make_pair(nullptr, tree);
-  }
-
-  Node *curNode = tree;
-  push(curNode);
-
-  int curpos = nodeSize(curNode->left);
-  while (curpos != pos) {
-    assert(curNode != nullptr);
-    if (curpos < pos) {
-      curNode = curNode->right;
-      push(curNode);
-      curpos += nodeSize(curNode->left) + 1;
-    } else {
-      curNode = curNode->left;
-      push(curNode);
-      curpos -= nodeSize(curNode->right) + 1;
-    }
-  }
-
-  splay(tree, curNode);
-
-  std::pair<Node *, Node *> result = std::make_pair(tree, tree->right);
-  result.first->right = nullptr;
-  update(result.first);
-  result.second->parent = nullptr;
-
-  return result;
-}
-
-void ImplicitSplayTree::splay(Node *&tree, Node *node) {
-  if (node == nullptr) return;
-  if (node == tree) return;
-
-  while (true) {
-    Node *parent = node->parent;
-
-    //Zig
-    if (parent == tree) {
-      if (parent->left == node) {
-        rotate(node, RIGHT);
-      } else {
-        rotate(node, LEFT);
-      }
-      if (parent == tree) break;
-      continue;
-    }
-
-    Node *grandpa = parent->parent;
-    //Zig-Zig
-    if (parent != nullptr && (grandpa->left == parent && parent->left == node) ||
-        (grandpa->right == parent && parent->right == node)) {
-      if (grandpa->left == parent && parent->left == node) {
-        rotate(parent, RIGHT);
-        rotate(node, RIGHT);
-      } else {
-        rotate(parent, LEFT);
-        rotate(node, LEFT);
-      }
-      if (grandpa == tree) break;
-      continue;
-    }
-
-    //Zig-Zag
-    if (parent != nullptr && (grandpa->left == parent && parent->right == node) ||
-        (grandpa->right == parent && parent->left == node)) {
-      if (grandpa->left == parent && parent->right == node) {
-        rotate(node, LEFT);
-        rotate(node, RIGHT);
-      } else {
-        rotate(node, RIGHT);
-        rotate(node, LEFT);
-      }
-      if (grandpa == tree) break;
-      continue;
-    }
-  }
-  tree = node;
-}
-
-void ImplicitSplayTree::assign(Node *&tree, int value, int pos) {
-  assert(pos >= 0 && pos < nodeSize(tree));
-
-  Node *curNode = tree;
-
-  int curpos = nodeSize(curNode->left);
-
-  while (curpos != pos) {
-    assert(curNode != nullptr);
-    if (curpos < pos) {
-      curNode = curNode->right;
-      push(curNode);
-      curpos += nodeSize(curNode->left) + 1;
-    } else {
-      curNode = curNode->left;
-      push(curNode);
-      curpos -= nodeSize(curNode->right) + 1;
-    }
-  }
-
-  splay(tree, curNode);
-  tree->key = value;//tree is curNode now
-  update(tree);
-}
-
-void ImplicitSplayTree::rotate(Node *a, side s1) {
-  assert(a != nullptr);
-  Node *b = a->parent;
-  assert(b != nullptr);
-  push(b);
-  push(a);
-
-  //identify kind of rotation
-  side s2;
-  if (s1 == RIGHT) s2 = LEFT;
-  else s2 = RIGHT;
-
-  //childs swap
-  getChild(b, s2) = getChild(a, s1);
-  if (getChild(a, s1) != nullptr) getChild(a, s1)->parent = b;
-  getChild(a, s1) = b;
-
-  //parents swap
-  a->parent = b->parent;
-  b->parent = a;
-  if (a->parent != nullptr) {
-    if (getChild(a->parent, s2) == b) getChild(a->parent, s2) = a;
-    else getChild(a->parent, s1) = a;
-  }
-
-  update(b);
-  update(a);
-}
-
 //main functions
 int ImplicitSplayTree::getSum(int left, int right) {
-  assert(left >= 0 && left <= right && right < nodeSize(root));
+  assert(left >= 0 && left <= right && right < nodeSize(root_));
 
   std::pair<Node *, Node *> p1 = split(root_, left - 1);
   std::pair<Node *, Node *> p2 = split(p1.second, right - left);
@@ -195,7 +29,7 @@ int ImplicitSplayTree::getSum(int left, int right) {
 }
 
 void ImplicitSplayTree::insert(int value, int pos) {
-  assert(pos >= 0 && pos <= nodeSize(root));
+  assert(pos >= 0 && pos <= nodeSize(root_));
 
   Node *newNode = new Node(value);
 
@@ -213,7 +47,7 @@ void ImplicitSplayTree::assign(int value, int pos) {
 }
 
 void ImplicitSplayTree::add(int value, int left, int right) {
-  assert(left >= 0 && left <= right && right < nodeSize(root));
+  assert(left >= 0 && left <= right && right < nodeSize(root_));
 
   std::pair<Node *, Node *> p1 = split(root_, left - 1);
   std::pair<Node *, Node *> p2 = split(p1.second, right - left);
@@ -225,7 +59,7 @@ void ImplicitSplayTree::add(int value, int left, int right) {
 }
 
 void ImplicitSplayTree::nextPermutation(int left, int right) {
-  assert(left >= 0 && left <= right && right < nodeSize(root));
+  assert(left >= 0 && left <= right && right < nodeSize(root_));
 
   std::pair<Node *, Node *> p1 = split(root_, left - 1);
   std::pair<Node *, Node *> p2 = split(p1.second, right - left);
@@ -295,16 +129,175 @@ void ImplicitSplayTree::print(std::vector<int> *v) {
   print(root_, v);
 }
 
-void ImplicitSplayTree::print(Node *node, std::vector<int> *v) {
+//---------------
+Node *ImplicitSplayTree::merge(Node *left, Node *right) {
+  if (right == nullptr) return left;
+  if (left == nullptr) return right;
+
+  push(left);
+
+  if (left->right != nullptr) {
+    Node *curNode = left;
+    while (curNode->right != nullptr) {
+      curNode = curNode->right;
+      push(curNode);
+    }
+    splay(left, curNode);
+  }
+
+  push(left);
+  left->right = right;
+  right->parent = left;
+  update(left);
+
+  return left;
+}
+
+std::pair<Node *, Node *> ImplicitSplayTree::split(Node *tree, int pos) {
+  assert(tree != nullptr);
+  assert(nodeSize(tree) > pos && pos >= -1);
+
+  if (nodeSize(tree) == pos + 1) {
+    return std::make_pair(tree, nullptr);
+  }
+
+  if (pos == -1) {
+    return std::make_pair(nullptr, tree);
+  }
+
+  Node *curNode = tree;
+  push(curNode);
+
+  int curpos = nodeSize(curNode->left);
+  while (curpos != pos) {
+    assert(curNode != nullptr);
+    if (curpos < pos) {
+      curNode = curNode->right;
+      push(curNode);
+      curpos += nodeSize(curNode->left) + 1;
+    } else {
+      curNode = curNode->left;
+      push(curNode);
+      curpos -= nodeSize(curNode->right) + 1;
+    }
+  }
+
+  splay(tree, curNode);
+
+  std::pair<Node *, Node *> result = std::make_pair(tree, tree->right);
+  result.first->right = nullptr;
+  update(result.first);
+  result.second->parent = nullptr;
+
+  return result;
+}
+
+void ImplicitSplayTree::splay(Node *&tree, Node *node) {
   if (node == nullptr) return;
-  push(node);
-  print(node->left, v);
-  v->push_back(node->key);
-  print(node->right, v);
+  if (node == tree) return;
+
+  while (true) {
+    Node *parent = node->parent;
+
+    //Zig
+    if (parent == tree) {
+      if (parent->left == node) {
+        rotate(node, RIGHT);
+      } else {
+        rotate(node, LEFT);
+      }
+      if (parent == tree) break;
+      continue;
+    }
+
+    Node *grandpa = parent->parent;
+    //Zig-Zig
+    if (parent != nullptr && (grandpa->left == parent && parent->left == node)
+        || (grandpa->right == parent && parent->right == node)) {
+      if (grandpa->left == parent && parent->left == node) {
+        rotate(parent, RIGHT);
+        rotate(node, RIGHT);
+      } else {
+        rotate(parent, LEFT);
+        rotate(node, LEFT);
+      }
+      if (grandpa == tree) break;
+      continue;
+    }
+
+    //Zig-Zag
+    if (parent != nullptr && (grandpa->left == parent && parent->right == node)
+        || (grandpa->right == parent && parent->left == node)) {
+      if (grandpa->left == parent && parent->right == node) {
+        rotate(node, LEFT);
+        rotate(node, RIGHT);
+      } else {
+        rotate(node, RIGHT);
+        rotate(node, LEFT);
+      }
+      if (grandpa == tree) break;
+      continue;
+    }
+  }
+  tree = node;
+}
+
+void ImplicitSplayTree::assign(Node *&tree, int value, int pos) {
+  assert(pos >= 0 && pos < nodeSize(tree));
+
+  Node *curNode = tree;
+
+  int curpos = nodeSize(curNode->left);
+
+  while (curpos != pos) {
+    assert(curNode != nullptr);
+    if (curpos < pos) {
+      curNode = curNode->right;
+      push(curNode);
+      curpos += nodeSize(curNode->left) + 1;
+    } else {
+      curNode = curNode->left;
+      push(curNode);
+      curpos -= nodeSize(curNode->right) + 1;
+    }
+  }
+
+  splay(tree, curNode);
+  tree->key = value;//tree is curNode now
+  update(tree);
+}
+
+void ImplicitSplayTree::rotate(Node *a, side s1) {
+  assert(a != nullptr);
+  Node *b = a->parent;
+  assert(b != nullptr);
+  push(b);
+  push(a);
+
+  //identify kind of rotation
+  side s2;
+  if (s1 == RIGHT) s2 = LEFT;
+  else s2 = RIGHT;
+
+  //childs swap
+  getChild(b, s2) = getChild(a, s1);
+  if (getChild(a, s1) != nullptr) getChild(a, s1)->parent = b;
+  getChild(a, s1) = b;
+
+  //parents swap
+  a->parent = b->parent;
+  b->parent = a;
+  if (a->parent != nullptr) {
+    if (getChild(a->parent, s2) == b) getChild(a->parent, s2) = a;
+    else getChild(a->parent, s1) = a;
+  }
+
+  update(b);
+  update(a);
 }
 
 //for work with subtree parts
-ImplicitSplayTree::Node *&ImplicitSplayTree::getChild(Node *node, side s) const {
+Node *&ImplicitSplayTree::getChild(Node *node, side s) const {
   assert(node != nullptr);
   if (s == LEFT) {
     return node->left;
@@ -322,7 +315,7 @@ int &ImplicitSplayTree::getPart(Node *node, side s) const {
   }
 }
 
-int ImplicitSplayTree::maxPart(Node *node, side s) const {
+int ImplicitSplayTree::maxPart(const Node *node, side s) const {
   //assert(node != nullptr);
   if (node == nullptr) return 0;
   if (s == LEFT) {
@@ -332,58 +325,12 @@ int ImplicitSplayTree::maxPart(Node *node, side s) const {
   }
 }
 
-int ImplicitSplayTree::element(Node *node, side s) const {
+int ImplicitSplayTree::element(const Node *node, side s) const {
   if (node == nullptr) return 0;
   if (s == LEFT) {
     return nodeFirst(node);
   } else {
     return nodeLast(node);
-  }
-}
-
-//for safe work with node
-int ImplicitSplayTree::nodeSize(Node *node) const {
-  if (node == nullptr) return 0;
-  else return node->size;
-}
-
-int ImplicitSplayTree::nodeSum(Node *node) const {
-  if (node != nullptr) {
-    return node->sum + node->add * node->size;
-  } else {
-    return 0;
-  }
-}
-
-int ImplicitSplayTree::nodeMaxSuff(Node *node) const {
-  if (node != nullptr) {
-    return (!node->isReverse) ? node->max_suff : node->max_pref;
-  } else {
-    return 0;
-  }
-}
-
-int ImplicitSplayTree::nodeMaxPref(Node *node) const {
-  if (node != nullptr) {
-    return (!node->isReverse) ? node->max_pref : node->max_suff;
-  } else {
-    return 0;
-  }
-}
-
-int ImplicitSplayTree::nodeFirst(Node *node) const {
-  if (node != nullptr) {
-    return ((!node->isReverse) ? node->first : node->last) + node->add;
-  } else {
-    return 0;
-  }
-}
-
-int ImplicitSplayTree::nodeLast(Node *node) const {
-  if (node != nullptr) {
-    return ((!node->isReverse) ? node->last : node->first) + node->add;
-  } else {
-    return 0;
   }
 }
 
@@ -454,4 +401,13 @@ void ImplicitSplayTree::push(Node *node) {
 
     node->isReverse = 0;
   }
+}
+
+//for tests
+void ImplicitSplayTree::print(Node *node, std::vector<int> *v) {
+  if (node == nullptr) return;
+  push(node);
+  print(node->left, v);
+  v->push_back(node->key);
+  print(node->right, v);
 }

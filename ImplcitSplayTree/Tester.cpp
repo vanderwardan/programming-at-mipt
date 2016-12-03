@@ -114,7 +114,6 @@ int main() {
 
   return 0;
 }
-
 //--------------VectorRealise----------------------------------------
 int VectorRealise::getSum(int left, int right) {
   return std::accumulate(array.begin() + left, array.begin() + right + 1, 0);
