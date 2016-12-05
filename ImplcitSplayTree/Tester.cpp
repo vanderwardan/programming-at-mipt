@@ -3,6 +3,7 @@
 #include <fstream>
 #include <time.h>
 
+//IArray implementation, for test
 class VectorRealise : public IArray {
  public:
   int getSum(int left, int right);

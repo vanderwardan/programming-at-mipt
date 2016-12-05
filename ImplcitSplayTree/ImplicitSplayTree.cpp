@@ -1,7 +1,7 @@
 #include "ImplicitSplayTree.h"
 
 ImplicitSplayTree::~ImplicitSplayTree() {
-  std::queue<Node *> queue;
+  std::queue < Node * > queue;
   queue.push(root_);
 
   while (!queue.empty()) {
@@ -19,8 +19,8 @@ ImplicitSplayTree::~ImplicitSplayTree() {
 int ImplicitSplayTree::getSum(int left, int right) {
   assert(left >= 0 && left <= right && right < nodeSize(root_));
 
-  std::pair<Node *, Node *> p1 = split(root_, left - 1);
-  std::pair<Node *, Node *> p2 = split(p1.second, right - left);
+  std::pair < Node * , Node * > p1 = split(root_, left - 1);
+  std::pair < Node * , Node * > p2 = split(p1.second, right - left);
 
   int res = nodeSum(p2.first);
   p1.second = merge(p2.first, p2.second);
@@ -36,7 +36,7 @@ void ImplicitSplayTree::insert(int value, int pos) {
   if (root_ == nullptr) {
     root_ = newNode;
   } else {
-    std::pair<Node *, Node *> p = split(root_, pos - 1);
+    std::pair < Node * , Node * > p = split(root_, pos - 1);
     p.first = merge(p.first, newNode);
     root_ = merge(p.first, p.second);
   }
@@ -49,8 +49,8 @@ void ImplicitSplayTree::assign(int value, int pos) {
 void ImplicitSplayTree::add(int value, int left, int right) {
   assert(left >= 0 && left <= right && right < nodeSize(root_));
 
-  std::pair<Node *, Node *> p1 = split(root_, left - 1);
-  std::pair<Node *, Node *> p2 = split(p1.second, right - left);
+  std::pair < Node * , Node * > p1 = split(root_, left - 1);
+  std::pair < Node * , Node * > p2 = split(p1.second, right - left);
 
   p2.first->add += value;
 
@@ -61,8 +61,8 @@ void ImplicitSplayTree::add(int value, int left, int right) {
 void ImplicitSplayTree::nextPermutation(int left, int right) {
   assert(left >= 0 && left <= right && right < nodeSize(root_));
 
-  std::pair<Node *, Node *> p1 = split(root_, left - 1);
-  std::pair<Node *, Node *> p2 = split(p1.second, right - left);
+  std::pair < Node * , Node * > p1 = split(root_, left - 1);
+  std::pair < Node * , Node * > p2 = split(p1.second, right - left);
 
   //p2.first is subtree we should to work with
   Node *node = p2.first;
@@ -72,7 +72,7 @@ void ImplicitSplayTree::nextPermutation(int left, int right) {
   } else {
     //find max decreasing suf
     int pos = node->size - nodeMaxSuff(node);
-    std::pair<Node *, Node *> nodep = split(node, pos - 1);
+    std::pair < Node * , Node * > nodep = split(node, pos - 1);
     int key = nodeLast(nodep.first);
 
     //find node in suff for swap
@@ -184,7 +184,7 @@ std::pair<Node *, Node *> ImplicitSplayTree::split(Node *tree, int pos) {
 
   splay(tree, curNode);
 
-  std::pair<Node *, Node *> result = std::make_pair(tree, tree->right);
+  std::pair < Node * , Node * > result = std::make_pair(tree, tree->right);
   result.first->right = nullptr;
   update(result.first);
   result.second->parent = nullptr;

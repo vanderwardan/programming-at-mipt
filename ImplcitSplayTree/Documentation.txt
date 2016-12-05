@@ -1,0 +1,7 @@
+ImplicitSplayTree is implementation of IArray. It's based on Splay tree with implicit key. There are some methods in the class:
+1. int getSum(int left, int right) - returns sum of the segment [left,right]
+2. void insert(int value, int pos) - the array is extended by inserting new element before the element at the specified pos
+3. void assign(int value, int pos) - assigns new element to the array, replacing its current element
+4. void add(int value, int left, int right) - adds value for each element of the segment [left,right]
+5. void nextPermutation(int left, int right) - rearranges the elements in the segment [first,last] into the next lexicographically greater permutation
+ 
