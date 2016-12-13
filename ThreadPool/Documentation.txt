@@ -1,0 +1,2 @@
+std::future<Value> submit(std::function<Value()> task) - add new function in the pool
+void shutdown() - all functions, that already have run, will be done, and then pool will be closed. 
